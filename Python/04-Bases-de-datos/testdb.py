@@ -47,3 +47,4 @@ for row in cursor.fetchall():
     print(f"{row["CustomerID"]}# {row["CompanyName"]} -> {row["NumPedidos"]} pedidos")
 
 ####
+###
