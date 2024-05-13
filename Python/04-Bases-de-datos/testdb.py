@@ -2,7 +2,7 @@ import pymssql
 
 # Establecer la conexión con la base de datos
 connection = pymssql.connect(
-    server="hostdb-eoi.database.windows.net",
+    server="hostdb2-eoi.database.windows.net",
     port="1433",
     user="Administrador",
     password="azurePa$$w0rd",
@@ -59,15 +59,23 @@ cliente2 = {"CustomerID": "DEMO2",
 # INSERT comando de inserción
 command = """
     INSERT INTO dbo.Customers(CustomerID, CompanyName, ContactTitle, City, Country)
-    VALUES('ACF01', 'Compañía SL', 'Álvaro Cascajosa', 'Osuna', 'España')
+    VALUES('ACF01', 'Company SL', 'Álvaro Cascajosa', 'Osuna', 'España')
 """
 
-# 
+# Insertamos nuevos registros ejecutando el comando INSERT
 cursor.execute(command)
 
-#connection.commit()
+# Utilizamos la función commit() de la conexión para CONFIRMAR la transacción
+# tanto para operaciones de insercción, actualización y borrado
+connection.commit()
 
-#connection.rollback()
+# Utilizamos la función rollback() de la conexión para ANULAR la transacción
+# tanto para operaciones de insercción, actualización y borrado
+connection.rollback()
 
 
+
+
+
+# Cierre de la conexión
 connection.close()
