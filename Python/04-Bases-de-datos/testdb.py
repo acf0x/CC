@@ -57,10 +57,34 @@ cliente2 = {"CustomerID": "DEMO2",
             "Fax": "910 101 103"}
 
 # INSERT comando de inserción
+# Ejemplo que indica las columnas o campos y los valores
 command = """
     INSERT INTO dbo.Customers(CustomerID, CompanyName, ContactTitle, City, Country)
     VALUES('ACF01', 'Company SL', 'Álvaro Cascajosa', 'Osuna', 'España')
 """
+
+# Ejemplo que indica las columnas o campos y comodines para los valores
+command = """
+    INSERT INTO dbo.Customers VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+"""
+
+# Al ejecutar el comando con comodines, pasamos como segundo parámetro los valroes en una lista
+command2 = """ # Hay que dar los valores después
+    INSERT INTO dbo.Customers(CustomerID, CompanyName, ContactName, ContactTitle, City, Country)
+    VALUES(%s, %s, %s, %s, %s, %s)
+
+cursor.execute(command2, ["ACF1", "Company DEMO, SL", "Álvaro Cascajosa", "CEO", "Osuna", "España"])
+cursor.execute(command2, ("ACF2", "Company DEMO, SL", "Álvaro Cascajosa", "CEO", "Osuna", "España"))
+
+connection.commit()
+"""
+
+# Se pueden poner comodines en todas las posiciones
+# Hay que poner tantos %s como valores tiene en total, al no haber delimitado como arriba despues de dbo.Customers
+command = """ 
+    INSERT INTO dbo.Customers VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+"""
+
 
 # Insertamos nuevos registros ejecutando el comando INSERT
 cursor.execute(command)
@@ -74,8 +98,26 @@ connection.commit()
 connection.rollback()
 
 
+# Para insertar varios registros, creamos una lista que contiene en cada
+# posición una tupla con los valores de cada registro a insertar
+"""
+data = []
+data.append("ACF3", "Company DEMO, SL", "Álvaro Cascajosa", "CEO", "Osuna", "España")
+data.append("ACF4", "Company DEMO, SL", "Álvaro Cascajosa", "CEO", "Osuna", "España")
+data.append("ACF5", "Company DEMO, SL", "Álvaro Cascajosa", "CEO", "Osuna", "España")
+"""
 
+# Utilizamos .executemany() para insertar varios registros y pasamos como
+# segundo parámetro la lista de tuplas con los valores de los diferentes registros
+"""
+cursor.executemany(command2, data)
+connection.commit()
+"""
 
+# .rowcount devuelve el num de registros insertados, actualizados o borrados
+"""
+print(f"{cursor.rowcount} registros insertados.")
+"""
 
 # Cierre de la conexión
 connection.close()
