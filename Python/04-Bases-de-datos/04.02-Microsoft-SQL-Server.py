@@ -156,7 +156,7 @@ for row in cursor.fetchall():
     
     
 ######################################################
-# INSERT, insertar nuevo registros
+# INSERT, insertar nuevo registros                   #
 ######################################################
 
 # Definición de un objeto que representa el registro CUSTOMER 
@@ -262,6 +262,73 @@ connection.commit()
 """
 print(f"{cursor.rowcount} registros insertados.")
 """
+######################################################
+# UPDATE, actualizar registros                       #
+######################################################
+
+command = """
+    UPDATE dbo.Customers
+    SET Adress = 'Calle Uno, S/N', ContactName = 'Carlos Sánchez'
+    WHERE CustomerID = 'BCR11'
+"""
+
+cursor.execute(command)
+connection.commit()
+
+command = """
+    UPDATE dbo.Customers
+    SET Adress = %s, ContactName = %s
+    WHERE CustomerID = 'BCR12'
+"""
+
+cursor.execute(command, ("Calle Principal, 10", "María Sanz"))
+connection.commit()
+
+print(f"{cursor.rowcount} registros modificados")
+
+######################################################
+# DELETE, eliminar   registros                       #
+######################################################
+
+command = """
+    DELETE FROM dbo.Customers
+    WHERE CustomerID = 'BCR13'
+
+try:
+    cursor.execute(command)
+    connection.commit()
+except Exception as e:
+    connection.rollback()
+    print(f"Error: {e}")
+finally:
+    print(f"{cursor.rowcount} registros eliminados")
+    connection.close()
+"""
+
+
+command = """
+    DELETE FROM dbo.Customers
+    WHERE CustomerID = '%s'
+
+try:
+    cursor.execute(command, ("BCR13"))
+    connection.commit()
+except Exception as e:
+    connection.rollback()
+    print(f"Error: {e}")
+finally:
+    print(f"{cursor.rowcount} registros eliminados")
+    connection.close()
+"""
+
+# Cierre de la conexión
+connection.close()
+
+
+
+
+
+
 
 # Cierre de la conexión
 connection.close()
