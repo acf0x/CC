@@ -12,8 +12,7 @@
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
-Python\05-Microservicios\05.03-EMT-Madrid.py
-Python/05-Microservicios/05.03-EMT-Madrid.py
+#Python/05-Microservicios/05.03-EMT-Madrid.py
 
 # Mono auto generated files
 mono_crash.*

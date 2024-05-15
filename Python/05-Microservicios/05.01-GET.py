@@ -2,7 +2,7 @@
 # Trabajando con Request                                            #
 #####################################################################
 
-# Importtar los módulos necesarios
+# Importar los módulos necesarios
 import requests, pprint
 
 # En el ejemplo consultamos una base de datos de direcciones IP
@@ -26,7 +26,7 @@ try:
     # Mostramos el código de estado y en modo texto utilizando REASON
     print(f"Estado: {response.status_code} / {response.reason}")
 
-    if(response.status_code == 200):
+    if(response.status_code == 200):        # la doc del API dice cual codigo valida, en este caso (y en muchos), 200
         # Mostramos las cabeceras del mensaje de respuesta
         print(f"Cabeceras: {response.headers}")
         print(f"Content-Type: {response.headers["Content-Type"]}")
