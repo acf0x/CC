@@ -16,6 +16,7 @@ app = Flask(__name__, template_folder="templates")
 @app.route("/api/products", methods=["GET"])
 def products_get():
     try:
+        categoria = request.args.get("categoria", None)
         connection = pymssql.connect(
             server="hostdb2-eoi.database.windows.net",
             port="1433",
@@ -24,7 +25,10 @@ def products_get():
             database="Northwind")
 
         cursor = connection.cursor(as_dict=True)
-        cursor.execute("SELECT * FROM dbo.Products")
+        if(categoria != None):
+            cursor.execute(f"SELECT * FROM dbo.Products WHERE CategoryID = {categoria}")
+        else:
+            cursor.execute("SELECT * FROM dbo.Products")
 
         return jsonify(cursor.fetchall()), 200
     except Exception as err:
@@ -86,20 +90,98 @@ def products_post():
 
 
         cursor.execute(command)
-
         
         connection.commit()
-        
-        
-        cursor.execute("SELECT SCOPE_IDENTITY() AS Identity")
-        insert_product = cursor.fetchone()["Identity"]
 
         if(cursor.rowcount == 1):
-            return jsonify(insert_product), 201
+            return jsonify(new_product), 201
         else:
             return jsonify({"Message": "Producto no insertado."}), 400
     except Exception as err:
         return jsonify(err), 500
+
+# Actualizar un producto
+# Ruta: http://dominio.com/api/products/77
+@app.route("/api/products/<int:id>", methods=["PUT"])
+def products_put(id):
+    try:
+        product = request.json
+        
+        if(product["ProductID"] != id):
+            return jsonify({"Message": "Identificador del producto no válido."})
+        
+        connection = pymssql.connect(
+            server="hostdb2-eoi.database.windows.net",
+            port="1433",
+            user="Administrador",
+            password="azurePa$$w0rd",
+            database="Northwind")
+
+        cursor = connection.cursor(as_dict=True)
+
+        command = f"""
+
+            UPDATE dbo.Products SET 
+                ProductName = '{product["ProductName"]}',
+                CategoryID = {product["CategoryID"]},
+                Discontinued = '{product["Discontinued"]}',
+                SupplierID = {product["SupplierID"]},
+                ReorderLevel = {product["ReorderLevel"]},
+                QuantityPerUnit = '{product["QuantityPerUnit"]}',
+                UnitsInStock = {product["UnitsInStock"]},
+                UnitsOnOrder = {product["UnitsOnOrder"]},
+                UnitPrice = {product["UnitPrice"]} WHERE ProductID = {product["ProductID"]}
+        """
+        
+        # ^^^  alfanumerico debe ser entrecomillado, numérico no  ^^^
+
+        cursor.execute(command)
+        connection.commit()
+
+        if(cursor.rowcount == 1):
+            return jsonify(""), 204
+        else:
+            return jsonify({"Message": "Producto no actualizado."}), 400
+        
+    except Exception as err:
+        return jsonify(err), 500
+    
+    
+# Eliminar el producto 34
+# Ruta: http://dominio.com/api/products/34
+@app.route("/api/products/<int:id>", methods=["DELETE"])
+def products_delete(id):
+    try:
+
+        connection = pymssql.connect(
+            server="hostdb2-eoi.database.windows.net",
+            port="1433",
+            user="Administrador",
+            password="azurePa$$w0rd",
+            database="Northwind")
+
+        cursor = connection.cursor(as_dict=True)
+    
+        cursor.execute(f"DELETE FROM dbo.Products WHERE ProductID = {id}")
+        connection.commit()
+
+        if(cursor.rowcount == 1):
+            return jsonify(""), 200
+        else:
+            return jsonify({"Message": "El producto no eliminado o no existe."}), 400
+        
+    except Exception as err:
+        return jsonify(err), 500
+        
+#########################################################################
+# Funciones que se ejecutan en todas las peticioens
+#########################################################################
+
+@app.before_request
+def verificar_apikey():
+    apikey = request.headers.get("Authorization", None)
+    if (apikey!="8aaWPy5SzLubp9ApRQbZkWkHA6PFZ33n"):
+        return jsonify({"Message": "Acceso no autorizado."}), 401
 
 #########################################################################
 # Ejecutar la aplicación de Flask en el servidor web integrado
