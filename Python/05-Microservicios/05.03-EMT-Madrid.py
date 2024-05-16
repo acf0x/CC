@@ -1,6 +1,6 @@
 
 #####################################################################
-# Consultar timepo de llegada del autobus                           #
+# Consultar tiempo de llegada del autobus                           #
 #####################################################################
 
 import requests
