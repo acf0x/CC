@@ -1,11 +1,12 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, Response, jsonify, session
+from XMLModulo import *
 import pymssql
 
 #########################################################################
 # Creamos una instancia de Flask
 #########################################################################
 app = Flask(__name__, template_folder="templates")
-
+app.secret_key = b"5s2%_5d3'$$ds92xDS5s"
 
 #########################################################################
 # Rutas de la aplicación Flask
@@ -17,6 +18,7 @@ app = Flask(__name__, template_folder="templates")
 def products_get():
     try:
         categoria = request.args.get("categoria", None)
+
         connection = pymssql.connect(
             server="hostdb2-eoi.database.windows.net",
             port="1433",
@@ -25,12 +27,23 @@ def products_get():
             database="Northwind")
 
         cursor = connection.cursor(as_dict=True)
-        if(categoria != None):
+        
+        if (categoria != None):
             cursor.execute(f"SELECT * FROM dbo.Products WHERE CategoryID = {categoria}")
         else:
             cursor.execute("SELECT * FROM dbo.Products")
 
-        return jsonify(cursor.fetchall()), 200
+        if (session["response_type"] == "xml"):
+            xml = "<products>"
+            for item in cursor.fetchall():
+                xml = xml + dict_to_xml(item, "product")
+
+            xml = xml + "</products>"
+            response = Response(xml, status=200, content_type="application/xml")
+
+            return response
+        else:
+            return jsonify(cursor.fetchall()), 200
     except Exception as err:
         return jsonify(err), 500
 
@@ -51,15 +64,18 @@ def product_get(id):
             cursor = connection.cursor(as_dict=True)
             cursor.execute(f"SELECT * FROM dbo.Products WHERE ProductID = {id}")
 
-            return jsonify(cursor.fetchone()), 200
+            if (session["response_type"] == "xml"):
+                xml = dict_to_xml(cursor.fetchone(), "product")
+                response = Response(xml, status=200, content_type="application/xml")
+
+                return response
+            else:
+                return jsonify(cursor.fetchone()), 200
         else:
             return jsonify({"Message": "La referencia del producto no es valida."}), 400
     except Exception as err:
         return jsonify(err), 500
 
-# Crear un nuevo producto
-# Ruta: http://dominio.com/api/products
-@app.route("/api/products", methods=["POST"])
 # Crear un nuevo producto
 # Ruta: http://dominio.com/api/products
 @app.route("/api/products", methods=["POST"])
@@ -176,7 +192,6 @@ def products_put(id):
     except Exception as err:
         return jsonify(err), 500
     
-    
 # Eliminar el producto 34
 # Ruta: http://dominio.com/api/products/34
 @app.route("/api/products/<int:id>", methods=["DELETE"])
@@ -212,6 +227,11 @@ def verificar_apikey():
     apikey = request.headers.get("Authorization", None)
     if (apikey!="8aaWPy5SzLubp9ApRQbZkWkHA6PFZ33n"):
         return jsonify({"Message": "Acceso no autorizado."}), 401
+
+@app.before_request    
+def get_type_response():
+    session["responsetype"] = request.args.get("rt", "json").lower()    # session es un diccionario, añadimos un valor responsetype
+#                                                                         necesita un app.secretkey, genera un cookie
 
 #########################################################################
 # Ejecutar la aplicación de Flask en el servidor web integrado
