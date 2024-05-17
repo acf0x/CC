@@ -60,6 +60,9 @@ def product_get(id):
 # Crear un nuevo producto
 # Ruta: http://dominio.com/api/products
 @app.route("/api/products", methods=["POST"])
+# Crear un nuevo producto
+# Ruta: http://dominio.com/api/products
+@app.route("/api/products", methods=["POST"])
 def products_post():
     try:
         new_product = request.json
@@ -73,10 +76,37 @@ def products_post():
 
         cursor = connection.cursor(as_dict=True)
 
+        # VERSIÓN ANTIGUA:
+        # command = f"""
+        #     DECLARE @NewID INT;
+
+        #     INSERT INTO dbo.Products(ProductName, CategoryID, Discontinued, SupplierID,
+        #         ReorderLevel, QuantityPerUnit, UnitsInStock, UnitsOnOrder, UnitPrice) VALUES (
+        #         '{new_product["ProductName"]}',
+        #         {new_product["CategoryID"]},
+        #         '{new_product["Discontinued"]}',
+        #         {new_product["SupplierID"]},
+        #         {new_product["ReorderLevel"]},
+        #         '{new_product["QuantityPerUnit"]}',
+        #         {new_product["UnitsInStock"]},
+        #         {new_product["UnitsOnOrder"]},
+        #         {new_product["UnitPrice"]});
+            
+        #     SET @NewID = SCOPE_IDENTITY();
+
+        #     SELECT * FROM dbo.Products WHERE ProductID = @NewID
+        # """
+
+        # cursor.execute(command)
+        # connection.commit()
+
+        # return jsonify(cursor.fetchone()), 201
+    
+        # VERSIÓN NUEVA:
         command = f"""
             INSERT INTO dbo.Products(ProductName, CategoryID, Discontinued, SupplierID,
                 ReorderLevel, QuantityPerUnit, UnitsInStock, UnitsOnOrder, UnitPrice) VALUES (
-                '{new_product["ProductName"]}',     
+                '{new_product["ProductName"]}',
                 {new_product["CategoryID"]},
                 '{new_product["Discontinued"]}',
                 {new_product["SupplierID"]},
@@ -84,17 +114,17 @@ def products_post():
                 '{new_product["QuantityPerUnit"]}',
                 {new_product["UnitsInStock"]},
                 {new_product["UnitsOnOrder"]},
-                {new_product["UnitPrice"]})
+                {new_product["UnitPrice"]});
         """
-# ^^^  alfanumerico debe ser entrecomillado, numérico no  ^^^
-
 
         cursor.execute(command)
-        
-        connection.commit()
+        connection.commit()    
 
         if(cursor.rowcount == 1):
-            return jsonify(new_product), 201
+            id = cursor.lastrowid
+            cursor.execute(f"SELECT * FROM dbo.Products WHERE ProductID = {id}")
+
+            return jsonify(cursor.fetchone()), 201
         else:
             return jsonify({"Message": "Producto no insertado."}), 400
     except Exception as err:
